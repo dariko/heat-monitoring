@@ -1,0 +1,54 @@
+-   name: prometheus group
+    group:
+        name: prometheus
+
+-   name: prometheus user
+    user:
+        name: prometheus
+        group: prometheus
+
+-   name: download prometheus
+    get_url:
+        url: "{{ prometheus_release_url }}"
+        dest: "{{ prometheus_release_filename }}"
+-   name: extract prometheus binary
+    args:
+        creates: /usr/local/bin/prometheus
+    shell: |
+        tar --extract \
+            --strip-components=1 \
+            --wildcards \
+            --file "{{ prometheus_release_filename }}" \
+            --directory /usr/local/bin/ \
+            prometheus*/prometheus
+-   name: prometheus systemd unit
+    copy:
+        content: "{{ prometheus_systemd_unit }}"
+        dest: /etc/systemd/system/prometheus.service
+    notify:
+    -   systemctl daemon-reload
+    -   prometheus rolling restart
+
+-   name: /etc/prometheus
+    file: 
+        path: /etc/prometheus
+        state: directory
+-   name: /data/prometheus
+    file: 
+        path: /data/prometheus
+        state: directory
+        owner: prometheus
+        group: root
+-   name: /etc/prometheus/prometheus.yml
+    copy:
+        content: "{{ prometheus_config }}"
+        dest: /etc/prometheus/prometheus.yml
+        owner: root
+        group: prometheus
+    notify: prometheus rolling restart
+
+-   name: start, enable prometheus
+    service:
+        name: prometheus
+        state: started
+        enabled: yes

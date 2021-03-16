@@ -1,0 +1,18 @@
+prometheus_release_url: https://github.com/prometheus/prometheus/releases/download/v2.25.1/prometheus-2.25.1.linux-amd64.tar.gz
+prometheus_release_filename: "/opt/{{ prometheus_release_url.split('/')[-1] }}"
+prometheus_config: "{{ lookup('template', 'prometheus_default_config.yml') }}"
+prometheus_systemd_unit: "{{ lookup('template', 'prometheus_default_unit.service') }}"
+prometheus_external_url: "http://{{inventory_hostname}}:9090"
+prometheus_retention_size: 1GB
+prometheus_retention_time: 7d
+prometheus_cli_options_base:
+-   name: "config.file"
+    value: "/etc/prometheus/prometheus.yml"
+-   name: "web.external-url"
+    value: "{{prometheus_external_url}}"
+-   name: storage.tsdb.retention.size
+    value: "{{prometheus_retention_size}}"
+-   name: storage.tsdb.retention.time
+    value: "{{prometheus_retention_time}}"
+prometheus_cli_options_extra: []
+prometheus_cli_options: "{{ prometheus_cli_options_base + prometheus_cli_options_extra}}"

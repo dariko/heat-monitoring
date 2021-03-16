@@ -1,0 +1,11 @@
+-   hosts: prometheus
+    gather_facts: no
+    roles:
+    -   role: prometheus
+    pre_tasks:
+    -   name: allow local login for prometheus user
+        blockinfile:
+            dest: /etc/security/access.conf
+            block: |
+                +:prometheus:LOCAL
+            insertbefore: BOF

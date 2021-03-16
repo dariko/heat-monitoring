@@ -1,0 +1,336 @@
+heat_template_version: 2018-08-31
+parameters:
+# not giving a default for REQ.network causes horizon to show the error
+# "ERROR: The Parameter (REQ.network) was not provided."
+# instead of showing the parameters mask
+# It works as expected if the resource `_network` (with external_id
+# == REQ.network) is removed.
+# Still, it is necessary to infer the subnet for the loadbalancer
+    REQ.network:
+        type: string
+        constraints:
+        -   custom_constraint: neutron.network
+        default: ""
+
+    REQ.image:
+        type: string
+        constraints:
+        -   custom_constraint: glance.image
+
+    root_volume_size:
+        type: number
+        default: 10
+    root_volume_type:
+        type: string
+        default: ceph
+
+    prometheus_volume_type:
+        type: string
+        default: ceph
+    prometheus_volume_size:
+        type: number
+        default: 15
+
+    flavor_prometheus:
+        type: string
+        default: sys.2c4r
+    flavor_grafana:
+        type: string
+        default: sys.2c4r
+
+    deploy_version:
+        type: string
+        default: master
+
+    scale_prometheus:
+        type: number
+        default: 1
+
+    scale_grafana:
+        type: number
+        default: 1
+
+    dns_suffix:
+        type: string
+        default: ".local"
+
+    ansible_runner_template:
+        type: string
+        default: https://raw.githubusercontent.com/dariko/heat-ansible_runner/ec96c45b4aed7cabcf098bb0f44111811ff4fc45/cloudconfig.yaml
+
+resources:
+    _network:
+        type: OS::Neutron::Net
+        external_id: {get_param: REQ.network}
+
+    grafana_security_group:
+        type: OS::Neutron::SecurityGroup
+        properties:
+            rules:
+            -   protocol: tcp
+                port_range_min: 22
+                port_range_max: 22
+            -   protocol: tcp
+                port_range_min: 3000
+                port_range_max: 3000
+            -   protocol: icmp
+
+    prometheus_security_group:
+        type: OS::Neutron::SecurityGroup
+        properties:
+            rules:
+            -   protocol: tcp
+                port_range_min: 22
+                port_range_max: 22
+            -   protocol: tcp
+                port_range_min: 9090
+                port_range_max: 9090
+                remote_group_id: {get_resource: grafana_security_group}
+
+    loadbalancer:
+        type: OS::Octavia::LoadBalancer
+        properties:
+            vip_subnet: {get_attr: [_network, subnets, 0]}
+
+    listener_tcp80:
+        type: OS::Octavia::Listener
+        properties:
+            loadbalancer: {get_resource: loadbalancer}
+            protocol: TCP
+            protocol_port: 80
+
+    pool_grafana:
+        type: OS::Octavia::Pool
+        properties:
+            lb_algorithm: ROUND_ROBIN
+            listener: {get_resource: listener_tcp80}
+            protocol: TCP
+
+    pool_grafana_healthmonitor:
+        type: OS::Octavia::HealthMonitor
+        properties:
+            delay: 3
+            max_retries: 2
+            timeout: 2
+            type: TCP
+            pool: {get_resource: pool_grafana}
+
+    keypair:
+        type: OS::Nova::KeyPair
+        properties:
+            save_private_key: yes
+            name: {list_join: ["-", ["ansible-runner", {get_param: OS::stack_id}]]}
+
+    prometheus_servers:
+        type: OS::Heat::ResourceGroup
+        properties:
+            count: {get_param: scale_prometheus}
+            resource_def:
+                type: OS::Heat::Stack
+                properties:
+                    parameters:
+                        network: {get_param: REQ.network}
+                        keypair: {get_resource: keypair}
+                        volume_type: {get_param: root_volume_type}
+                        volume_size: {get_param: root_volume_size}
+                        data_volume_type: {get_param: prometheus_volume_type}
+                        data_volume_size: {get_param: prometheus_volume_size}
+                        image: {get_param: REQ.image}
+                        flavor: {get_param: flavor_prometheus}
+                        security_group: {get_resource: prometheus_security_group}
+                        dns_suffix: {get_param: dns_suffix}
+                    template: |
+                        heat_template_version: 2018-08-31
+                        parameters:
+                            image:
+                                type: string
+                            volume_type:
+                                type: string
+                            volume_size:
+                                type: string
+                            data_volume_type:
+                                type: string
+                            data_volume_size:
+                                type: string
+                            network:
+                                type: string
+                            flavor:
+                                type: string
+                            keypair:
+                                type: string
+                            security_group:
+                                type: string
+                            dns_suffix:
+                                type: string
+                        resources:
+                            name:
+                                type: OS::Heat::Value
+                                properties:
+                                    value:
+                                        str_replace:
+                                            template: prometheus-%index%$dns_suffix
+                                            params:
+                                                $dns_suffix: {get_param: dns_suffix}
+                            port:
+                                type: OS::Neutron::Port
+                                properties:
+                                    network: {get_param: network}
+                                    security_groups:
+                                    -   {get_param: security_group}
+                            root_volume:
+                                type: OS::Cinder::Volume
+                                properties:
+                                    image: {get_param: image}
+                                    size: {get_param: volume_size}
+                                    volume_type: {get_param: volume_type}
+                            data_volume:
+                                type: OS::Cinder::Volume
+                                properties:
+                                    size: {get_param: data_volume_size}
+                                    volume_type: {get_param: data_volume_type}
+                            data_volume_attachment:
+                                type: OS::Cinder::VolumeAttachment
+                                properties:
+                                    instance_uuid: {get_resource: server}
+                                    volume_id: {get_resource: data_volume}
+                                    mountpoint: /dev/vdb
+                            server:
+                                type: OS::Nova::Server
+                                properties:
+                                    networks:
+                                    -   port: {get_resource: port}
+                                    block_device_mapping_v2:
+                                    -   volume_id: {get_resource: root_volume}
+                                    name: {get_attr: [name, value]}
+                                    flavor: {get_param: flavor}
+                                    user_data_format: SOFTWARE_CONFIG
+                                    key_name: {get_param: keypair}
+                        outputs:
+                            name:
+                                value: {get_attr: [name, value]}
+
+    grafana_servers:
+        type: OS::Heat::ResourceGroup
+        properties:
+            count: {get_param: scale_grafana}
+            resource_def:
+                type: OS::Heat::Stack
+                properties:
+                    parameters:
+                        network: {get_param: REQ.network}
+                        keypair: {get_resource: keypair}
+                        volume_type: {get_param: root_volume_type}
+                        volume_size: {get_param: root_volume_size}
+                        image: {get_param: REQ.image}
+                        flavor: {get_param: flavor_grafana}
+                        security_group: {get_resource: grafana_security_group}
+                        pool: {get_resource: pool_grafana}
+                        dns_suffix: {get_param: dns_suffix}
+                    template: |
+                        heat_template_version: 2018-08-31
+                        parameters:
+                            image:
+                                type: string
+                            volume_type:
+                                type: string
+                            volume_size:
+                                type: string
+                            network:
+                                type: string
+                            flavor:
+                                type: string
+                            keypair:
+                                type: string
+                            security_group:
+                                type: string
+                            pool:
+                                type: string
+                            dns_suffix:
+                                type: string
+                        resources:
+                            name:
+                                type: OS::Heat::Value
+                                properties:
+                                    value:
+                                        str_replace:
+                                            template: grafana-%index%$dns_suffix
+                                            params:
+                                                $dns_suffix: {get_param: dns_suffix}
+                            pool_member:
+                                type: OS::Octavia::PoolMember
+                                properties:
+                                    address: {get_attr: [port, fixed_ips, 0, ip_address]}
+                                    pool: {get_param: pool}
+                                    protocol_port: 5601
+                            port:
+                                type: OS::Neutron::Port
+                                properties:
+                                    network: {get_param: network}
+                                    security_groups:
+                                    -   {get_param: security_group}
+                            root_volume:
+                                type: OS::Cinder::Volume
+                                properties:
+                                    image: {get_param: image}
+                                    size: {get_param: volume_size}
+                                    volume_type: {get_param: volume_type}
+                            server:
+                                type: OS::Nova::Server
+                                properties:
+                                    networks:
+                                    -   port: {get_resource: port}
+                                    block_device_mapping_v2:
+                                    -   volume_id: {get_resource: root_volume}
+                                    name: {get_attr: [name, value]}
+                                    flavor: {get_param: flavor}
+                                    user_data_format: SOFTWARE_CONFIG
+                                    key_name: {get_param: keypair}
+                        outputs:
+                            name:
+                                value: {get_attr: [name, value]}
+
+    ansible_inventory:
+        type: OS::Heat::Value
+        properties:
+            value:
+                str_replace:
+                    params:
+                        $prometheus_names:
+                            list_join:
+                            -   "\n"
+                            -   {get_attr: [prometheus_servers, outputs, name]}
+                        $grafana_names:
+                            list_join:
+                            -   "\n"
+                            -   {get_attr: [grafana_servers, outputs, name]}
+                    template: |
+                        [grafana]
+                        $grafana_names
+                        [prometheus]
+                        $prometheus_names
+
+    ansible_runner:
+        type: {get_param: ansible_runner_template}
+        properties:
+            ssh_key:
+                get_attr:
+                -   keypair
+                -   private_key
+            image: {get_param: REQ.image}
+            hostname:
+                str_replace:
+                    template: ansible$dns_suffix
+                    params:
+                        $dns_suffix: {get_param: dns_suffix}
+            inventory: {get_attr: [ansible_inventory, value]}
+            repository_url: https://github.com/dariko/heat-monitoring
+            repository_version: {get_param: deploy_version}
+            playbook_name: site.yml
+
+outputs:
+    grafana_url:
+        value:
+            str_replace:
+                params:
+                    loadbalancer_vip: {get_attr: [loadbalancer, vip_address]}
+                template: http://loadbalancer_vip
