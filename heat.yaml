@@ -17,6 +17,11 @@ parameters:
         constraints:
         -   custom_constraint: glance.image
 
+    REQ.dns_suffix:
+        type: string
+    REQ.api_auth_url:
+        type: string
+
     root_volume_size:
         type: number
         default: 10
@@ -50,18 +55,42 @@ parameters:
         type: number
         default: 1
 
-    dns_suffix:
-        type: string
-        default: ".local"
-
-    ansible_runner_template:
-        type: string
-        default: https://raw.githubusercontent.com/dariko/heat-ansible_runner/ec96c45b4aed7cabcf098bb0f44111811ff4fc45/cloudconfig.yaml
-
 resources:
     _network:
         type: OS::Neutron::Net
         external_id: {get_param: REQ.network}
+
+    _project:
+        type: OS::Keystone::Project
+        external_id: {get_param: OS::project_id}
+
+    prometheus_user_name:
+        type: OS::Heat::Value
+        properties:
+            value:
+                str_replace:
+                    params:
+                        $project_name: {get_attr: [_project, name]}
+                    template:
+                        prometheus-discovery-$project_name
+
+    prometheus_user_password:
+        type: OS::Heat::RandomString
+
+    prometheus_user:
+        type: OS::Keystone::User
+        properties:
+            name: {get_attr: [prometheus_user_name, value]}
+            domain: default
+            password: {get_attr: [prometheus_user_password, value]}
+
+    prometheus_user_role_assignment:
+        type: OS::Keystone::UserRoleAssignment
+        properties:
+            user: {get_resource: prometheus_user}
+            roles:
+            -   project: {get_resource: _project}
+                role: _member_
 
     grafana_security_group:
         type: OS::Neutron::SecurityGroup
@@ -138,7 +167,7 @@ resources:
                         image: {get_param: REQ.image}
                         flavor: {get_param: flavor_prometheus}
                         security_group: {get_resource: prometheus_security_group}
-                        dns_suffix: {get_param: dns_suffix}
+                        dns_suffix: {get_param: REQ.dns_suffix}
                     template: |
                         heat_template_version: 2018-08-31
                         parameters:
@@ -225,7 +254,7 @@ resources:
                         flavor: {get_param: flavor_grafana}
                         security_group: {get_resource: grafana_security_group}
                         pool: {get_resource: pool_grafana}
-                        dns_suffix: {get_param: dns_suffix}
+                        dns_suffix: {get_param: REQ.dns_suffix}
                     template: |
                         heat_template_version: 2018-08-31
                         parameters:
@@ -303,14 +332,23 @@ resources:
                             list_join:
                             -   "\n"
                             -   {get_attr: [grafana_servers, outputs, name]}
+                        $prometheus_user_id: {get_resource: prometheus_user}
+                        $prometheus_user_password: {get_attr: [prometheus_user_password, value]}
+                        $api_auth_url: {get_param: REQ.api_auth_url}
+                        $project_id: {get_resource: _project}
                     template: |
                         [grafana]
                         $grafana_names
                         [prometheus]
                         $prometheus_names
+                        [prometheus:vars]
+                        prometheus_openstack_discovery_user_id=$prometheus_user_id
+                        prometheus_openstack_discovery_password=$prometheus_user_password
+                        openstack_auth_url=$api_auth_url
+                        openstack_project_id=$project_id
 
     ansible_runner:
-        type: {get_param: ansible_runner_template}
+        type: https://raw.githubusercontent.com/dariko/heat-ansible_runner/956ffea5e054c67209e24ba9943cd637c1456d17/cloudconfig.yaml
         properties:
             ssh_key:
                 get_attr:
@@ -321,10 +359,11 @@ resources:
                 str_replace:
                     template: ansible$dns_suffix
                     params:
-                        $dns_suffix: {get_param: dns_suffix}
+                        $dns_suffix: {get_param: REQ.dns_suffix}
             inventory: {get_attr: [ansible_inventory, value]}
             repository_url: https://github.com/dariko/heat-monitoring
             repository_version: {get_param: deploy_version}
+            network: {get_resource: _network}
             playbook_name: site.yml
 
 outputs:
