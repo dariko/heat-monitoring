@@ -56,7 +56,7 @@
         index_var: loop_idx
     copy:
         content: "{{ item }}"
-        dest: "/etc/grafana/provisioning/dashboards/ansible/{{ loop_idx }}.yaml"
+        dest: "/etc/grafana/provisioning/dashboards/ansible/{{ loop_idx }}.json"
     notify: grafana rolling restart
 
 -   name: start, enable grafana
