@@ -27,6 +27,34 @@
         dest: /etc/grafana/provisioning/datasources/ansible.yaml
     notify: grafana rolling restart
 
+-   name: /etc/grafana/provisioning/dashboards/ansible.yaml
+    copy:
+        content: |
+            providers:
+            -   name: ansible
+                orgId: 1
+                type: file
+                disableDeletion: false
+                updateIntervalSeconds: 60
+                allowUiUpdates: true
+                options:
+                    path: /etc/grafana/provisioning/dashboards/ansible
+                    foldersFromFilesStructure: true
+        dest: /etc/grafana/provisioning/dashboards/ansible.yaml
+    notify: grafana rolling restart
+
+-   name: /etc/grafana/provisioning/dashboards/ansible/
+    file:
+        path: /etc/grafana/provisioning/dashboards/ansible
+        state: directory
+    notify: grafana rolling restart
+
+-   name: /etc/grafana/provisioning/dashboards/ansible/*
+    copy:
+        content: "{{ item }}"
+        dest: "/etc/grafana/provisioning/dashboards/ansible/{{ loop.index }}.yaml"
+    notify: grafana rolling restart
+
 -   name: start, enable grafana
     service:
         name: grafana-server

@@ -17,3 +17,4 @@ grafana_cli_options_extra: []
 grafana_cli_options: "{{ grafana_cli_options_base + grafana_cli_options_extra}}"
 
 grafana_provision_datasources: ""
+grafana_provision_dashboards: []
