@@ -314,7 +314,7 @@ resources:
                                 properties:
                                     address: {get_attr: [port, fixed_ips, 0, ip_address]}
                                     pool: {get_param: pool}
-                                    protocol_port: 5601
+                                    protocol_port: 3000
                             port:
                                 type: OS::Neutron::Port
                                 properties:
