@@ -28,6 +28,7 @@ parameters:
 
     grafana_ldap_viewer_groups:
         type: comma_delimited_list
+        default: ""
 
     root_volume_size:
         type: number
