@@ -11,7 +11,7 @@ grafana:
             bind_dn = "uid=%s,ou=users,dc=ns,dc=farm"
             search_filter = "(uid=%s)"
             search_base_dns = ["dc=ns,dc=farm"]
-            group_search_filter = "(&(objectClass=posixGroup)(memberUid=%s))"
+            group_search_filter = "(&(objectClass=groupOfMembers)(member=%s))"
             group_search_base_dns = ["ou=groups,dc=ns,dc=farm"]
             [servers.attributes]
             name = "givenName"
