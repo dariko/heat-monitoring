@@ -1,0 +1,12 @@
+Description=alertmanager
+Wants=network-online.target
+After=network-online.target
+[Service]
+Type=simple
+User=prometheus
+Group=prometheus
+ExecStart=/usr/local/bin/prometheus {% for option in prometheus_cli_options %} --{{ option.name}}={{option.value}}{% endfor %}
+
+Restart=always
+[Install]
+WantedBy=multi-user.target
