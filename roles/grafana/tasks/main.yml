@@ -50,6 +50,7 @@
     notify: grafana rolling restart
 
 -   name: /etc/grafana/provisioning/dashboards/ansible/*
+    loop: "{{ grafana_provision_dashboards }}"
     copy:
         content: "{{ item }}"
         dest: "/etc/grafana/provisioning/dashboards/ansible/{{ loop.index }}.yaml"
