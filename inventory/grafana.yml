@@ -21,12 +21,12 @@ grafana:
             email =  "email"
             {% for grafana_ldap_admin_group in grafana_ldap_admin_groups|default([]) %}
             [[servers.group_mappings]]
-            group_dn = "{{ grafana_ldap_admin_group }}"
+            group_dn = "cn={{ grafana_ldap_admin_group }},ou=groups,dc=ns,dc=farm"
             org_role = "Admin"
             {% endfor %}
             {% for grafana_ldap_viewer_group in grafana_ldap_viewer_groups|default([]) %}
             [[servers.group_mappings]]
-            group_dn = "{{ grafana_ldap_viewer_group }}"
+            group_dn = "cn={{ grafana_ldap_viewer_group }},ou=groups,dc=ns,dc=farm"
             org_role = "Viewer"
             {% endfor %}
             #[[servers.group_mappings]]
