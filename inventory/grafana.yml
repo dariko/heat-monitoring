@@ -37,7 +37,7 @@ grafana:
             apiVersion: 1
             datasources:
             {% for h in groups.prometheus %}
-            -   name: "{{h}}"
+            -   name: "{{h.split('.')[0]}}"
                 type: Prometheus
                 access: proxy
                 orgId: 1
