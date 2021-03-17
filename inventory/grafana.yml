@@ -41,7 +41,7 @@ grafana:
                 type: prometheus
                 access: proxy
                 orgId: 1
-                url: "https://{{h}}:9090"
+                url: "http://{{h}}:9090"
                 isDefault: {{ loop.first }}
                 version: 1
                 editable: false
