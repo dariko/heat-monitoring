@@ -356,8 +356,8 @@ resources:
                         prometheus_openstack_discovery_password=$prometheus_user_password
                         openstack_auth_url=$api_auth_url
                         openstack_project_id=$project_id
-                        grafana_ldap_admin_groups={{"$grafana_ldap_admin_groups".split(',')}}
-                        grafana_ldap_viewer_groups={{"$grafana_ldap_viewer_groups".split(',')}}
+                        grafana_ldap_admin_groups=$grafana_ldap_admin_groups
+                        grafana_ldap_viewer_groups=$grafana_ldap_viewer_groups
 
     ansible_runner:
         type: https://raw.githubusercontent.com/dariko/heat-ansible_runner/956ffea5e054c67209e24ba9943cd637c1456d17/cloudconfig.yaml
