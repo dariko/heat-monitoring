@@ -19,9 +19,16 @@ grafana:
             username = "uid"
             #member_of = "memberOf"
             email =  "email"
+            {% for grafana_ldap_admin_group in grafana_ldap_admin_groups|default([]) %}
             [[servers.group_mappings]]
-            group_dn = "cn=infrastructure,ou=groups,dc=ns,dc=farm"
+            group_dn = "{{ grafana_ldap_admin_group }}"
             org_role = "Admin"
+            {% endfor %}
+            {% for grafana_ldap_viewer_group in grafana_ldap_viewer_groups|default([]) %}
+            [[servers.group_mappings]]
+            group_dn = "{{ grafana_ldap_viewer_group }}"
+            org_role = "Viewer"
+            {% endfor %}
             #[[servers.group_mappings]]
             #group_dn = "cn=,ou=groups,dc=ns,dc=farm"
             #org_role = "Viewer"

@@ -22,6 +22,13 @@ parameters:
     REQ.api_auth_url:
         type: string
 
+    grafana_ldap_admin_groups:
+        type: comma_delimited_list
+        default: cn=infrastructure,ou=groups,dc=it3,dc=ns,dc=farm
+
+    grafana_ldap_viewer_groups:
+        type: comma_delimited_list
+
     root_volume_size:
         type: number
         default: 10
@@ -336,6 +343,8 @@ resources:
                         $prometheus_user_password: {get_attr: [prometheus_user_password, value]}
                         $api_auth_url: {get_param: REQ.api_auth_url}
                         $project_id: {get_resource: _project}
+                        $grafana_ldap_admin_groups: {get_param: grafana_ldap_admin_groups}
+                        $grafana_ldap_viewer_groups: {get_param: grafana_ldap_viewer_groups}
                     template: |
                         [grafana]
                         $grafana_names
@@ -346,6 +355,8 @@ resources:
                         prometheus_openstack_discovery_password=$prometheus_user_password
                         openstack_auth_url=$api_auth_url
                         openstack_project_id=$project_id
+                        grafana_ldap_admin_groups={{"$grafana_ldap_admin_groups".split(',')}}
+                        grafana_ldap_viewer_groups={{"$grafana_ldap_viewer_groups".split(',')}}
 
     ansible_runner:
         type: https://raw.githubusercontent.com/dariko/heat-ansible_runner/956ffea5e054c67209e24ba9943cd637c1456d17/cloudconfig.yaml
