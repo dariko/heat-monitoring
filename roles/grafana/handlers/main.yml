@@ -3,6 +3,7 @@
 
 -   name: grafana rolling restart
     loop: "{{ play_hosts }}"
+    run_once: yes
     loop_control:
         loop_var: rolling_restart_node
     include_tasks: tasks/rolling_restart_node.yml

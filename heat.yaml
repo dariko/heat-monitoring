@@ -24,7 +24,7 @@ parameters:
 
     grafana_ldap_admin_groups:
         type: comma_delimited_list
-        default: cn=infrastructure,ou=groups,dc=it3,dc=ns,dc=farm
+        default: infrastructure
 
     grafana_ldap_viewer_groups:
         type: comma_delimited_list
