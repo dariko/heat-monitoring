@@ -51,9 +51,11 @@
 
 -   name: /etc/grafana/provisioning/dashboards/ansible/*
     loop: "{{ grafana_provision_dashboards }}"
+    loop_control:
+        index_var: loop_idx
     copy:
         content: "{{ item }}"
-        dest: "/etc/grafana/provisioning/dashboards/ansible/{{ loop.index }}.yaml"
+        dest: "/etc/grafana/provisioning/dashboards/ansible/{{ loop_idx }}.yaml"
     notify: grafana rolling restart
 
 -   name: start, enable grafana
