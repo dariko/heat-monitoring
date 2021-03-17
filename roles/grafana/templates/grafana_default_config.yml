@@ -1,1 +1,5 @@
-
+{% if grafana_ldap_config is defined %}
+[auth.ldap]
+enabled = True
+config_file = /etc/grafana/ldap.toml
+{% endif %}

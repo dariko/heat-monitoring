@@ -1,0 +1,27 @@
+grafana:
+    vars:
+        grafana_ldap_config: |
+            [[servers]]
+            host = "ldap01.services.it3.ns.farm ldap02.services.it3.ns.farm"
+            port = 636
+            use_ssl = true
+            start_tls = false
+            ssl_skip_verify = false
+            root_ca_cert = "/etc/ldap.ca.crt"
+            bind_dn = "uid=%s,ou=users,dc=ns,dc=farm"
+            search_filter = "(uid=%s)"
+            search_base_dns = ["dc=ns,dc=farm"]
+            group_search_filter = "(&(objectClass=posixGroup)(memberUid=%s))"
+            group_search_base_dns = ["ou=groups,dc=ns,dc=farm"]
+            [servers.attributes]
+            name = "givenName"
+            surname = "sn"
+            username = "uid"
+            #member_of = "memberOf"
+            email =  "email"
+            [[servers.group_mappings]]
+            group_dn = "cn=infrastructure,ou=groups,dc=ns,dc=farm"
+            org_role = "Admin"
+            #[[servers.group_mappings]]
+            #group_dn = "cn=,ou=groups,dc=ns,dc=farm"
+            #org_role = "Viewer"

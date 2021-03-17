@@ -1,12 +1,3 @@
-#-   name: grafana group
-    #group:
-        #name: grafana
-
-#-   name: grafana user
-    #user:
-        #name: grafana
-        #group: grafana
-
 -   name: download grafana
     get_url:
         url: "{{ grafana_release_url }}"
@@ -16,41 +7,17 @@
     apt:
         deb: "{{ grafana_release_filename }}"
 
--   fail:
--   name: extract grafana binary
-    args:
-        creates: /usr/local/bin/grafana
-    shell: |
-        tar --extract \
-            --strip-components=1 \
-            --wildcards \
-            --file "{{ grafana_release_filename }}" \
-            --directory /usr/local/bin/ \
-            grafana*/grafana
--   name: grafana systemd unit
-    copy:
-        content: "{{ grafana_systemd_unit }}"
-        dest: /etc/systemd/system/grafana.service
-    notify:
-    -   systemctl daemon-reload
-    -   grafana rolling restart
-
--   name: /etc/grafana
-    file: 
-        path: /etc/grafana
-        state: directory
--   name: /data/grafana
-    file: 
-        path: /data/grafana
-        state: directory
-        owner: grafana
-        group: root
--   name: /etc/grafana/grafana.yml
+-   name: /etc/grafana/grafana.ini
     copy:
         content: "{{ grafana_config }}"
-        dest: /etc/grafana/grafana.yml
-        owner: root
-        group: grafana
+        dest: /etc/grafana/grafana.ini
+    notify: grafana rolling restart
+
+-   name: /etc/grafana/ldap.toml
+    when: grafana_ldap_config is defined
+    copy:
+        content: "{{ grafana_ldap_config }}"
+        dest: /etc/grafana/ldap.toml
     notify: grafana rolling restart
 
 -   name: start, enable grafana
