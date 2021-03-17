@@ -1,0 +1,9 @@
+prometheus_openstack_config: "{{ lookup('template', 'prometheus_openstack_config.yml') }}"
+prometheus_openstack_scrape_interval: 1m
+prometheus_openstack_evaluation_interval: 1m
+prometheus_openstack_job_configs:
+-   name: node_exporter
+    port: 9100
+    refresh_interval: 1m
+    openstack_tag_filter: prometheus_scrape_node
+    name_as_instance: yes

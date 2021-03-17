@@ -1,32 +1,10 @@
 -   hosts: prometheus
     gather_facts: no
-    roles:
-    -   role: prometheus
     vars:
-        prometheus_config: |
-            global:
-                scrape_interval: 1m
-                evaluation_interval: 30s
-            scrape_configs:
-            -   job_name: node
-                openstack_sd_configs:
-                -   role: instance
-                    identity_endpoint: {{ openstack_auth_url }}
-                    region: RegionOne
-                    userid: {{ prometheus_openstack_discovery_user_id }}
-                    password: {{ prometheus_openstack_discovery_password }}
-                    project_id: {{ openstack_project_id }}
-                    port: 9100
-                    refresh_interval: 1m
-                    tls_config:
-                        insecure_skip_verify: yes
-                relabel_configs:
-                #-   source_labels: [__meta_openstack_instance_status]
-                    #action: keep
-                    #regex: ACTIVE
-                -   source_labels: [__meta_openstack_tag_prometheus_scrape]
-                    action: keep
-                    regex: 'true'
+        prometheus_openstack_scrape_interval: 10s
+        prometheus_openstack_evaluation_interval: 10s
+    roles:
+    -   role: prometheus_openstack
     pre_tasks:
     -   name: allow local login for prometheus user
         blockinfile:
