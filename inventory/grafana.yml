@@ -38,7 +38,7 @@ grafana:
             datasources:
             {% for h in groups.prometheus %}
             -   name: "{{h.split('.')[0]}}"
-                type: Prometheus
+                type: prometheus
                 access: proxy
                 orgId: 1
                 url: "https://{{h}}:9090"
