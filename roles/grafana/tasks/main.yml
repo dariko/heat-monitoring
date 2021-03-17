@@ -12,6 +12,10 @@
         url: "{{ grafana_release_url }}"
         dest: "{{ grafana_release_filename }}"
 
+-   name: install grafana
+    apt:
+        deb: "{{ grafana_release_filename }}"
+
 -   fail:
 -   name: extract grafana binary
     args:
