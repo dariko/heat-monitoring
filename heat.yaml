@@ -63,6 +63,10 @@ parameters:
         type: number
         default: 1
 
+    node_exporter_security_group_name:
+        type: string
+        default: node_exporter
+
 resources:
     _network:
         type: OS::Neutron::Net
@@ -99,6 +103,17 @@ resources:
             roles:
             -   project: {get_resource: _project}
                 role: _member_
+
+    node_exporter_security_group:
+        type: OS::Neutron::SecurityGroup
+        properties:
+            name: {get_param: node_exporter_security_group_name}
+            properties:
+                rules:
+                -   protocol: tcp
+                    port_range_min: 9090
+                    port_range_max: 9090
+                    remote_group_id: {get_resource: prometheus_security_group}
 
     grafana_security_group:
         type: OS::Neutron::SecurityGroup
