@@ -1,0 +1,66 @@
+-   name: download grafana
+    get_url:
+        url: "{{ grafana_release_url }}"
+        dest: "{{ grafana_release_filename }}"
+
+-   name: install grafana
+    apt:
+        deb: "{{ grafana_release_filename }}"
+
+-   name: /etc/grafana/grafana.ini
+    copy:
+        content: "{{ grafana_config }}"
+        dest: /etc/grafana/grafana.ini
+    notify: grafana rolling restart
+
+-   name: /etc/grafana/ldap.toml
+    when: grafana_ldap_config is defined
+    copy:
+        content: "{{ grafana_ldap_config }}"
+        dest: /etc/grafana/ldap.toml
+    notify: grafana rolling restart
+
+-   name: /etc/grafana/provisioning/datasources/ansible.yaml
+    when: grafana_provision_datasources is defined
+    copy:
+        content: "{{grafana_provision_datasources}}"
+        dest: /etc/grafana/provisioning/datasources/ansible.yaml
+    notify: grafana rolling restart
+
+-   name: /etc/grafana/provisioning/dashboards/ansible.yaml
+    copy:
+        content: |
+            apiVersion: 1
+            providers:
+            -   name: ansible
+                orgId: 1
+                type: file
+                disableDeletion: false
+                updateIntervalSeconds: 60
+                allowUiUpdates: true
+                options:
+                    path: /etc/grafana/provisioning/dashboards/ansible
+                    foldersFromFilesStructure: true
+        dest: /etc/grafana/provisioning/dashboards/ansible.yaml
+    notify: grafana rolling restart
+
+-   name: /etc/grafana/provisioning/dashboards/ansible/
+    file:
+        path: /etc/grafana/provisioning/dashboards/ansible
+        state: directory
+    notify: grafana rolling restart
+
+-   name: /etc/grafana/provisioning/dashboards/ansible/*
+    loop: "{{ grafana_provision_dashboards }}"
+    loop_control:
+        index_var: loop_idx
+    copy:
+        content: "{{ item }}"
+        dest: "/etc/grafana/provisioning/dashboards/ansible/{{ loop_idx }}.json"
+    notify: grafana rolling restart
+
+-   name: start, enable grafana
+    service:
+        name: grafana-server
+        state: started
+        enabled: yes

@@ -1,0 +1,20 @@
+grafana_release_url: https://dl.grafana.com/oss/release/grafana_7.4.3_amd64.deb
+grafana_release_filename: "/opt/{{ grafana_release_url.split('/')[-1] }}"
+grafana_config: "{{ lookup('template', 'grafana_default_config.yml') }}"
+grafana_external_url: "http://{{inventory_hostname}}:9090"
+grafana_retention_size: 1GB
+grafana_retention_time: 7d
+grafana_cli_options_base:
+-   name: "config.file"
+    value: "/etc/grafana/grafana.yml"
+-   name: "web.external-url"
+    value: "{{grafana_external_url}}"
+-   name: storage.tsdb.retention.size
+    value: "{{grafana_retention_size}}"
+-   name: storage.tsdb.retention.time
+    value: "{{grafana_retention_time}}"
+grafana_cli_options_extra: []
+grafana_cli_options: "{{ grafana_cli_options_base + grafana_cli_options_extra}}"
+
+grafana_provision_datasources: ""
+grafana_provision_dashboards: []

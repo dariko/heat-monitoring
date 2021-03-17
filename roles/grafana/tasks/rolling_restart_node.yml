@@ -1,0 +1,5 @@
+-   name: restart grafana-server
+    delegate_to: "{{ rolling_restart_node }}"
+    service:
+        name: grafana-server
+        state: restarted
