@@ -30,6 +30,7 @@
 -   name: /etc/grafana/provisioning/dashboards/ansible.yaml
     copy:
         content: |
+            apiVersion: 1
             providers:
             -   name: ansible
                 orgId: 1
