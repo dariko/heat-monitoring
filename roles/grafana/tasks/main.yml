@@ -20,15 +20,10 @@
         dest: /etc/grafana/ldap.toml
     notify: grafana rolling restart
 
--   name: /etc/grafana/provision/datasources
-    file:
-        path: /etc/grafana/provision/datasources
-        state: directory
-
--   name: /etc/grafana/provision/datasources/ansible.yaml
-    when: grafana_provision_datasource is defined
+-   name: /etc/grafana/provisioning/datasources/ansible.yaml
+    when: grafana_provision_datasources is defined
     copy:
-        content: "{{grafana_provision_datasource}}"
+        content: "{{grafana_provision_datasources}}"
         dest: /etc/grafana/provision/datasources/ansible.yaml
     notify: grafana rolling restart
 

@@ -33,7 +33,7 @@ grafana:
             #group_dn = "cn=,ou=groups,dc=ns,dc=farm"
             #org_role = "Viewer"
 
-        grafana_provision_datasource: |
+        grafana_provision_datasources: |
             apiVersion: 1
             datasources:
             {% for h in groups.prometheus %}
