@@ -112,6 +112,7 @@ resources:
             -   protocol: tcp
                 port_range_min: 9100
                 port_range_max: 9100
+                remote_mode: remote_group_id
                 remote_group_id: {get_resource: prometheus_security_group}
 
     grafana_security_group:
@@ -136,6 +137,7 @@ resources:
             -   protocol: tcp
                 port_range_min: 9090
                 port_range_max: 9090
+                remote_mode: remote_group_id
                 remote_group_id: {get_resource: grafana_security_group}
 
     loadbalancer:
