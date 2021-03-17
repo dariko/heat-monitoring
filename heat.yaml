@@ -110,8 +110,8 @@ resources:
             name: {get_param: node_exporter_security_group_name}
             rules:
             -   protocol: tcp
-                port_range_min: 9090
-                port_range_max: 9090
+                port_range_min: 9100
+                port_range_max: 9100
                 remote_group_id: {get_resource: prometheus_security_group}
 
     grafana_security_group:
