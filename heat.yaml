@@ -277,7 +277,9 @@ resources:
                         volume_size: {get_param: root_volume_size}
                         image: {get_param: REQ.image}
                         flavor: {get_param: flavor_grafana}
-                        security_group: {get_resource: grafana_security_group}
+                        security_groups:
+                        -   {get_resource: grafana_security_group}
+                        -   {get_resource: node_exporter_security_group}
                         pool: {get_resource: pool_grafana}
                         dns_suffix: {get_param: REQ.dns_suffix}
                     template: |
@@ -295,8 +297,8 @@ resources:
                                 type: string
                             keypair:
                                 type: string
-                            security_group:
-                                type: string
+                            security_groups:
+                                type: json
                             pool:
                                 type: string
                             dns_suffix:
@@ -320,8 +322,7 @@ resources:
                                 type: OS::Neutron::Port
                                 properties:
                                     network: {get_param: network}
-                                    security_groups:
-                                    -   {get_param: security_group}
+                                    security_groups: {get_param: security_groups}
                             root_volume:
                                 type: OS::Cinder::Volume
                                 properties:
