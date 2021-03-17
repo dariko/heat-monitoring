@@ -32,3 +32,17 @@ grafana:
             #[[servers.group_mappings]]
             #group_dn = "cn=,ou=groups,dc=ns,dc=farm"
             #org_role = "Viewer"
+
+        grafana_provision_datasource: |
+            apiVersion: 1
+            datasources:
+            {% for h in groups.prometheus %}
+            -   name: {"{h}}"
+                type: Prometheus
+                access: proxy
+                orgId: 1
+                url: "https://{{h}}:9090"
+                isDefault: {{ loop.first }}
+                version: 1
+                editable: false
+            {% endfor %}
