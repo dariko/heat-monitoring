@@ -1,16 +1,18 @@
--   name: grafana group
-    group:
-        name: grafana
+#-   name: grafana group
+    #group:
+        #name: grafana
 
--   name: grafana user
-    user:
-        name: grafana
-        group: grafana
+#-   name: grafana user
+    #user:
+        #name: grafana
+        #group: grafana
 
 -   name: download grafana
     get_url:
         url: "{{ grafana_release_url }}"
         dest: "{{ grafana_release_filename }}"
+
+-   fail:
 -   name: extract grafana binary
     args:
         creates: /usr/local/bin/grafana
