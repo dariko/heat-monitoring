@@ -67,6 +67,12 @@ parameters:
         type: string
         default: node_exporter
 
+conditions:
+    do_loadbalancer:
+        not:
+            equals:
+            -   {get_param: scale_grafana}
+            -   1
 resources:
     _network:
         type: OS::Neutron::Net
@@ -141,11 +147,13 @@ resources:
                 remote_group_id: {get_resource: grafana_security_group}
 
     loadbalancer:
+        condition: do_loadbalancer
         type: OS::Octavia::LoadBalancer
         properties:
             vip_subnet: {get_attr: [_network, subnets, 0]}
 
     listener_tcp80:
+        condition: do_loadbalancer
         type: OS::Octavia::Listener
         properties:
             loadbalancer: {get_resource: loadbalancer}
@@ -153,6 +161,7 @@ resources:
             protocol_port: 80
 
     pool_grafana:
+        condition: do_loadbalancer
         type: OS::Octavia::Pool
         properties:
             lb_algorithm: ROUND_ROBIN
@@ -160,6 +169,7 @@ resources:
             protocol: TCP
 
     pool_grafana_healthmonitor:
+        condition: do_loadbalancer
         type: OS::Octavia::HealthMonitor
         properties:
             delay: 3
@@ -280,7 +290,11 @@ resources:
                         security_groups:
                         -   {get_resource: grafana_security_group}
                         -   {get_resource: node_exporter_security_group}
-                        pool: {get_resource: pool_grafana}
+                        pool:
+                            if:
+                            -   do_loadbalancer
+                            -   {get_resource: pool_grafana}
+                            -   ""
                         dns_suffix: {get_param: REQ.dns_suffix}
                     template: |
                         heat_template_version: 2018-08-31
@@ -303,6 +317,12 @@ resources:
                                 type: string
                             dns_suffix:
                                 type: string
+                        conditions:
+                            do_pool:
+                                not:
+                                    equals:
+                                    -   {get_param: pool}
+                                    -   ""
                         resources:
                             name:
                                 type: OS::Heat::Value
@@ -313,6 +333,7 @@ resources:
                                             params:
                                                 $dns_suffix: {get_param: dns_suffix}
                             pool_member:
+                                condition: do_pool
                                 type: OS::Octavia::PoolMember
                                 properties:
                                     address: {get_attr: [port, fixed_ips, 0, ip_address]}
@@ -343,6 +364,8 @@ resources:
                         outputs:
                             name:
                                 value: {get_attr: [name, value]}
+                            ip:
+                                value: {get_attr: [server, addresses, {get_param: network}, 0, addr] }
 
     ansible_inventory:
         type: OS::Heat::Value
@@ -378,7 +401,7 @@ resources:
                         grafana_ldap_viewer_groups=$grafana_ldap_viewer_groups
 
     ansible_runner:
-        type: https://raw.githubusercontent.com/dariko/heat-ansible_runner/6e3e926b3678128fa9ea91ae439b84e99c000ff7/cloudconfig.yaml
+        type: https://raw.githubusercontent.com/dariko/heat-ansible_runner/794697557722324d44fba33265fd5aba9d2e7928/cloudconfig.yaml
         properties:
             ssh_key:
                 get_attr:
@@ -403,5 +426,11 @@ outputs:
         value:
             str_replace:
                 params:
-                    loadbalancer_vip: {get_attr: [loadbalancer, vip_address]}
-                template: http://loadbalancer_vip
+                    ip:
+                        if:
+                        -   do_loadbalancer
+                        -   loadbalancer_vip: {get_attr: [loadbalancer, vip_address]}
+                        -   yaql:
+                                expression: $.data[0]
+                                data: {get_attr: [grafana_servers, outputs, ip]}
+                template: http://ip
