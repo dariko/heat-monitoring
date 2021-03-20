@@ -27,15 +27,21 @@
                 -   source_labels: [__meta_openstack_tag_prometheus_scrape]
                     action: keep
                     regex: 'true'
-            rules:
+            rule_files:
+            -   /etc/prometheus/prometheus.rules.yml
+        prometheus_rules: |
+            {% raw %}
             -   alert: HostHighCpuLoad
                 expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 80
                 for: 0m
                 labels:
                     severity: warning
                 annotations:
-                    summary: Host high CPU load (instance {{'{{'}} $labels.instance {{'}}'}})
-                    description: CPU load is > 80%\n  VALUE = {{'{{'}} $value {{'}}'}}\n  LABELS: {{'{{'}} $labels {{'}}'}}
+                    summary: |
+                        Host high CPU load (instance {{ $labels.instance }})
+                    description: |
+                        CPU load is > 80%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}
+            {% endraw %}
     pre_tasks:
     -   name: allow local login for prometheus user
         blockinfile:
