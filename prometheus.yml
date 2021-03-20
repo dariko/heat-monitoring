@@ -34,8 +34,8 @@
                 labels:
                     severity: warning
                 annotations:
-                    summary: Host high CPU load (instance {{ $labels.instance }})
-                    description: CPU load is > 80%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}
+                    summary: Host high CPU load (instance {{'{{'}} $labels.instance {{'}}'}})
+                    description: CPU load is > 80%\n  VALUE = {{'{{'}} $value {{'}}'}}\n  LABELS: {{'{{'}} $labels {{'}}'}}
     pre_tasks:
     -   name: allow local login for prometheus user
         blockinfile:
