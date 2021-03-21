@@ -15,6 +15,8 @@ scrape_configs:
         tls_config:
             insecure_skip_verify: yes
     relabel_configs:
+    -   source_labels: [__meta_openstack_instance_name]
+        target_label: instance
     -   source_labels: [__meta_openstack_tag_prometheus_scrape_node]
         action: keep
         regex: 'true'
