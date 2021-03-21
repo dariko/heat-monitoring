@@ -27,7 +27,7 @@
                 -   source_labels: [__meta_openstack_tag_prometheus_scrape]
                     action: keep
                     regex: 'true'
-                -   source_labels: [__meta_openstack_tag_prometheus_custom_threshold_(.*)]
+                -   regex: [__meta_openstack_tag_prometheus_custom_threshold_(.*)]
                     replacement: $1
             rule_files:
             -   /etc/prometheus/prometheus.rules.yml
