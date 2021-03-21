@@ -1,6 +1,8 @@
 prometheus_release_url: https://github.com/prometheus/prometheus/releases/download/v2.25.1/prometheus-2.25.1.linux-amd64.tar.gz
 prometheus_release_filename: "/opt/{{ prometheus_release_url.split('/')[-1] }}"
-prometheus_config: "{{ lookup('template', 'prometheus_default_config.yml') }}"
+prometheus_config_base: "{{ lookup('template', 'prometheus_default_config.yml') }}"
+prometheus_config_openstack: "{{ lookup('template', 'prometheus_openstack_config.yml') }}"
+prometheus_config: "{{ prometheus_config_openstack if prometheus_openstack else prometheus_config_base}}"
 prometheus_systemd_unit: "{{ lookup('template', 'prometheus_default_unit.service') }}"
 prometheus_external_url: "http://{{inventory_hostname}}:9090"
 prometheus_retention_size: 1GB
@@ -16,3 +18,7 @@ prometheus_cli_options_base:
     value: "{{prometheus_retention_time}}"
 prometheus_cli_options_extra: []
 prometheus_cli_options: "{{ prometheus_cli_options_base + prometheus_cli_options_extra}}"
+
+prometheus_openstack: yes
+prometheus_openstack_scrape_interval: 1m
+prometheus_openstack_evaluation_interval: 1m

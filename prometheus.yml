@@ -2,42 +2,17 @@
     gather_facts: no
     roles:
     -   role: prometheus
+        
     vars:
-        prometheus_config: |
-            global:
-                scrape_interval: 30s
-                evaluation_interval: 10s
-            scrape_configs:
-            -   job_name: node
-                openstack_sd_configs:
-                -   role: instance
-                    identity_endpoint: {{ openstack_auth_url }}
-                    region: RegionOne
-                    userid: {{ prometheus_openstack_discovery_user_id }}
-                    password: {{ prometheus_openstack_discovery_password }}
-                    project_id: {{ openstack_project_id }}
-                    port: 9100
-                    refresh_interval: 10s
-                    tls_config:
-                        insecure_skip_verify: yes
-                relabel_configs:
-                #-   source_labels: [__meta_openstack_instance_status]
-                    #action: keep
-                    #regex: ACTIVE
-                -   source_labels: [__meta_openstack_tag_prometheus_scrape]
-                    action: keep
-                    regex: 'true'
-                -   regex: '__meta_openstack_tag_(prometheus_custom_threshold_.*)'
-                    action: labelmap
-            rule_files:
-            -   /etc/prometheus/prometheus.rules.yml
+        prometheus_openstack_scrape_interval: 30s
+        prometheus_openstack_evaluation_interval: 30s
         prometheus_rules: |
             groups:
             -   name: caccamo
                 rules:
                 {% raw %}
                 -   alert: HostHighCpuLoad
-                    expr: |
+                        : |
                         100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
                     #100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > {{ $labels.cane }}
                     for: 0m
