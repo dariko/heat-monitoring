@@ -1,12 +1,8 @@
 global:
     scrape_interval: {{ prometheus_openstack_scrape_interval }}
-    evaluation_interval: {{ prometheus_openstack_evaluation_interval }}
+    evaluation_interval: {{ prometheus_openstack_scrape_interval }}
 scrape_configs:
-
--   job_name: dynamic-0
-    static_configs:
-    -   targets:
-        -   127.0.0.10:8080
+-   job_name: node_exporter
     openstack_sd_configs:
     -   role: instance
         identity_endpoint: {{ openstack_auth_url }}
@@ -19,13 +15,8 @@ scrape_configs:
         tls_config:
             insecure_skip_verify: yes
     relabel_configs:
-    #-   source_labels: [__meta_openstack_tag_prometheus_io_scrape_0_address]
-        #target_label: __address__
-    -   source_labels: [__meta_openstack_tag_prometheus_io_scrape_0_name]
-        target_label: __job__
-        replacement: cane
-    -   source_labels: [__meta_openstack_tag_prometheus_io_scrape_0_name]
-        replacement: cane
-        target_label: test
+    -   source_labels: [__meta_openstack_tag_prometheus_scrape_node]
+        action: keep
+        regex: 'true'
 rule_files:
 -   /etc/prometheus/prometheus.rules.yml
