@@ -47,14 +47,6 @@
         group: prometheus
     notify: prometheus rolling restart
 
-#-   name: /etc/prometheus/prometheus.rules.yml
-    #copy:
-        #content: "{{ prometheus_rules }}"
-        #dest: /etc/prometheus/prometheus.rules.yml
-        #owner: root
-        #group: prometheus
-    #notify: prometheus rolling restart
-
 -   name: start, enable prometheus
     service:
         name: prometheus
