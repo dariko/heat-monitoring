@@ -3,3 +3,6 @@
 enabled = True
 config_file = /etc/grafana/ldap.toml
 {% endif %}
+
+[server]
+http_port = 80

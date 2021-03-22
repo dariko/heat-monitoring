@@ -129,8 +129,8 @@ resources:
                 port_range_min: 22
                 port_range_max: 22
             -   protocol: tcp
-                port_range_min: 3000
-                port_range_max: 3000
+                port_range_min: 80
+                port_range_max: 80
             -   protocol: icmp
 
     prometheus_security_group:
@@ -338,7 +338,7 @@ resources:
                                 properties:
                                     address: {get_attr: [port, fixed_ips, 0, ip_address]}
                                     pool: {get_param: pool}
-                                    protocol_port: 3000
+                                    protocol_port: 80
                             port:
                                 type: OS::Neutron::Port
                                 properties:

@@ -20,6 +20,23 @@
         dest: /etc/grafana/ldap.toml
     notify: grafana rolling restart
 
+-   name: /etc/systemd/system/grafana-server.service.d/
+    file:
+        path: /etc/systemd/system/grafana-server.service.d/
+        state: directory
+
+-   name: allow grafana to bind on :80
+    when: grafana_grant_net_cap
+    copy:
+        content: |
+            [Service]
+            AmbientCapabilities=CAP_NET_BIND_SERVICE
+            Capabilities=CAP_NET_BIND_SERVICE+ep
+        dest: /etc/systemd/system/grafana-server.service.d/cap_net_bind_service.conf
+    notify:
+    -   systemctl daemon-reload
+    -   grafana rolling restart
+
 -   name: /etc/grafana/provisioning/datasources/ansible.yaml
     when: grafana_provision_datasources is defined
     copy:
