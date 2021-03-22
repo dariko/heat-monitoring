@@ -23,4 +23,5 @@ scrape_configs:
 {% if c.name_as_instance %}
     -   source_labels: [__meta_openstack_instance_name]
         target_label: instance
+{% endif %}
 {% endfor %}
