@@ -16,4 +16,3 @@ prometheus_cli_options_base:
     value: "{{prometheus_retention_time}}"
 prometheus_cli_options_extra: []
 prometheus_cli_options: "{{ prometheus_cli_options_base + prometheus_cli_options_extra}}"
-
