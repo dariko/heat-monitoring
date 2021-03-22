@@ -4,4 +4,4 @@
         prometheus_config: "{{ prometheus_openstack_config }}"
         prometheus_openstack_auth_url: "{{ openstack_auth_url }}"
         prometheus_openstack_user_id: "{{ prometheus_openstack_discovery_user_id }}"
-        prometheus_openstack_user_password: "{{ prometheus_openstack_discovery_user_password }}"
+        prometheus_openstack_user_password: "{{ prometheus_openstack_discovery_password }}"
