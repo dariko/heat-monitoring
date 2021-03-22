@@ -272,6 +272,10 @@ resources:
                         outputs:
                             name:
                                 value: {get_attr: [name, value]}
+                            ip:
+                                value: {get_attr: [server, addresses, {get_param: network}, 0, addr] }
+                            OS::stack_id:
+                                value: {get_resource: server}
 
     grafana_servers:
         type: OS::Heat::ResourceGroup
@@ -366,6 +370,8 @@ resources:
                                 value: {get_attr: [name, value]}
                             ip:
                                 value: {get_attr: [server, addresses, {get_param: network}, 0, addr] }
+                            OS::stack_id:
+                                value: {get_resource: server}
 
     ansible_inventory:
         type: OS::Heat::Value
@@ -421,6 +427,11 @@ resources:
             network: {get_resource: _network}
             playbook_name: site.yml
 
+    test_rg_inv2:
+        type: inventory_from_resource_group.yaml
+        properties:
+            resource_group: {get_resource: prometheus_servers}
+
 outputs:
     grafana_url:
         value:
@@ -434,3 +445,13 @@ outputs:
                                 expression: $.data[0]
                                 data: {get_attr: [grafana_servers, outputs, ip]}
                 template: http://ip
+
+    temp1:
+        value:
+            get_attr: [grafana_servers, outputs]
+    temp:
+        value:
+            yaql:
+                expression: $.data.v.map($.name + " ansible_host=" + $.ip)
+                data:
+                    v: {get_attr: [grafana_servers, outputs]}

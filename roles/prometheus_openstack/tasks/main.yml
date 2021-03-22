@@ -1,0 +1,6 @@
+-   import_role:
+    role: prometheus
+    prometheus_config: "{{ prometheus_config_openstack }}"
+    prometheus_openstack_auth_url: "{{ openstack_auth_url }}"
+    prometheus_openstack_user_id: "{{ prometheus_openstack_discovery_user_id }}"
+    prometheus_openstack_user_password: "{{ prometheus_openstack_discovery_user_password }}"

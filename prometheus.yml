@@ -4,25 +4,7 @@
         prometheus_openstack_scrape_interval: 10s
         prometheus_openstack_evaluation_interval: 10s
     roles:
-    -   role: prometheus
-        prometheus_rules: |
-            groups:
-            -   name: caccamo
-                rules:
-                {% raw %}
-                -   alert: HostHighCpuLoad
-                    expr: |
-                        100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
-                    #100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > {{ $labels.cane }}
-                    for: 0m
-                    labels:
-                        severity: warning
-                    annotations:
-                        summary: |
-                            Host high CPU load (instance {{ $labels.instance }})
-                        description: |
-                            CPU load is > 80%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}
-                {% endraw %}
+    -   role: prometheus_openstack
     pre_tasks:
     -   name: allow local login for prometheus user
         blockinfile:
